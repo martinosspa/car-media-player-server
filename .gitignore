@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Other config files
+*.iml
+*.xml
+
+# Audio Ignore
+*.mp3
+
+
+# Image ignore
+*.jpeg
