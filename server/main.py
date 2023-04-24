@@ -38,7 +38,6 @@ def main():
 					last_sync_decoded = last_sync.decode()
 
 					if float(last_sync_decoded) > float(last_update):
-						print(last_sync_decoded, last_update)
 						logging.info(f'client {addr[0]} is synced')
 						client.sendall('okay'.encode())
 						break
