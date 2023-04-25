@@ -1,23 +1,70 @@
 import socket
 import time
 import logging
+import os
+import json
 
 
-def build_local_library(path:str) -> None:
-	#for file in 
-	pass
-def main():
+def build_local_library(path:str) -> list:
+	folder_list = []
+	for folder in os.walk(path, topdown=False):
+		folder_dict = {
+		'name' : folder[0],
+		'subdirs' : folder[1],
+		'files' : folder[2]
+		}
+		folder_list.append(folder_dict)
 
-	
-	# main setup
-	last_update = '1' # in the future, hacky
+	return folder_list
+
+
+
+def client_send_okay_end(client, addr) -> None:
+	logging.info(f'Client {addr[0]} is synced')
+	client.sendall('okay'.encode())
+
+def client_begin_sync(client, addr) -> None:
+	logging.info(f'Client {addr[0]} needs to sync')
+	client.sendall('sync'.encode())
+
+	data = client.recv(1024)
+	client_library_json = json.loads(data.decode())
+
+	print(local_library == client_library_json)
+	logging.info(f'Client {addr[0]} synced')
+
+def main_socket_loop(server, last_update) -> None:
+	try:
+		while True:
+			server.listen()
+			client, addr = server.accept()
+			logging.info(f'Connected by {addr[0]}:{addr[1]}')
+
+			last_sync = client.recv(1024)
+			last_sync_decoded = last_sync.decode()
+
+			if float(last_sync_decoded) > float(last_update):
+				client_send_okay_end(client, addr)
+			else:
+				client_begin_sync(client, addr)
+
+			logging.debug(f'Closing connection with {addr[0]}')
+			client.close()
+	except KeyboardInterrupt:
+		print('\n')
+		logging.info('Closing Server')
+
+
+def main() -> None:
+	# initial setup
+	last_update = '99999999999999999999' # in the future, hacky
 	logging.basicConfig(format='[%(asctime)s] [%(levelname)s]: %(message)s', 
 						datefmt='%d %b %H:%M:%S',
 						level=logging.INFO)
 
-	# build audio library 
-
-	#build_local_library(path)
+	#Builds audio library 
+	global local_library
+	local_library = build_local_library('audio/')
 
 	
 	# start tcp server
@@ -26,50 +73,9 @@ def main():
 
 		server.bind(('192.168.0.63', 9999))
 		logging.info('Started succesfully')
-		try:
-			while True:
-				server.listen()
 
-				client, addr = server.accept()
-
-				with client:
-					logging.info(f'Connected by {addr[0]}:{addr[1]}')
-					last_sync = client.recv(1024)
-					last_sync_decoded = last_sync.decode()
-
-					if float(last_sync_decoded) > float(last_update):
-						logging.info(f'client {addr[0]} is synced')
-						client.sendall('okay'.encode())
-						break
-
-					logging.info('Client needs to sync')
-					time.sleep(1)
-					client.sendall('sync'.encode())
-					file_names = []
-
-					while True:
-						data = client.recv(1024)
-						decoded_data = str(data.decode())
-						
-						if decoded_data:
-							if decoded_data[-5:] == '<END>':
-								break
-							file_names.append(decoded_data)
-
-					# Check file names against server's 
-
-					logging.info(f'Closing connection with {addr[0]}')
-
-					
-					# while True:
-					# 	data = client.recv(1024)
-						
-					# 	if not data:
-					# 		break
-					# 	client.sendall(data)
-		except KeyboardInterrupt:
-			print('\n')
-			logging.info('closing')
+		main_socket_loop(server, last_update)
+	
 
 if __name__ == '__main__':
 	main()
