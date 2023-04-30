@@ -15,10 +15,8 @@ def send_file_to_client(client, file_path) -> None:
 	full_path = os.getcwd() + '/' + file_path
 	with open(full_path, 'rb') as file:
 		file_size = os.path.getsize(full_path)
-		# print(file_size//40960)
 		while message := file.read(40960):
 			client.sendall(message)
-
 		time.sleep(0.05)
 		client.sendall('<EOF>'.encode())
 
@@ -70,7 +68,6 @@ def client_begin_sync(client, addr) -> None:
 
 	data = client.recv(1024)
 	client_library_json = json.loads(data.decode())
-	
 
 	send_file_differences(client_library_json, local_library, client)
 	client.sendall('<END>'.encode()) # <END> Tag completes the sync
