@@ -5,16 +5,57 @@ import os
 import json
 
 
-def build_local_library(path:str) -> list:
-	folder_list = []
-	for folder in os.walk(path, topdown=False):
-		folder_dict = {
-		'name' : folder[0],
-		'subdirs' : folder[1],
-		'files' : folder[2]
-		}
-		folder_list.append(folder_dict)
+def wait_for_client_message(client, message) -> None:
+	while True:
+		client_message = client.recv(1024).decode()
+		if client_message == message: 
+			break
 
+def send_file_to_client(client, file_path) -> None:
+	full_path = os.getcwd() + '/' + file_path
+	with open(full_path, 'rb') as file:
+		file_size = os.path.getsize(full_path)
+		# print(file_size//40960)
+		while message := file.read(40960):
+			client.sendall(message)
+
+		time.sleep(0.05)
+		client.sendall('<EOF>'.encode())
+
+
+def send_file_differences(client_file_list, server_file_list, client) -> None:
+	'''
+	Messages to client from server have the format of:
+		/file.mp3
+		/folder/
+		/folder/file.mp3
+	After every file is sent an additional message is sent with the actual file
+	'''
+	for file in server_file_list:
+		if file in client_file_list: # Client already has that file
+			continue
+
+		if file[-1] == '/':
+			#current file is a directory
+			client.sendall(file.encode())
+			continue
+
+		client.sendall(file.encode())
+		time.sleep(0.05)
+		send_file_to_client(client, file)
+		wait_for_client_message(client, '<SNF>') # [S]end [N]ext [F]ile
+
+def build_local_library(path:str) -> list:
+	'''Builds a list of all directories and files in the path specified
+	   Note: directories always come before sub-files in the list'''
+	folder_list = []
+	for file in os.listdir(path):
+		if os.path.isfile(path + file):
+			folder_list.append(path + file)
+		else:
+			folder_list.append(path + file + '/')
+			if directory_dict := build_local_library(path + file + '/'):
+				folder_list.append(*directory_dict)
 	return folder_list
 
 
@@ -29,8 +70,10 @@ def client_begin_sync(client, addr) -> None:
 
 	data = client.recv(1024)
 	client_library_json = json.loads(data.decode())
+	
 
-	print(local_library == client_library_json)
+	send_file_differences(client_library_json, local_library, client)
+	client.sendall('<END>'.encode()) # <END> Tag completes the sync
 	logging.info(f'Client {addr[0]} synced')
 
 def main_socket_loop(server, last_update) -> None:
@@ -65,7 +108,6 @@ def main() -> None:
 	#Builds audio library 
 	global local_library
 	local_library = build_local_library('audio/')
-
 	
 	# start tcp server
 	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
@@ -73,7 +115,6 @@ def main() -> None:
 
 		server.bind(('192.168.0.63', 9999))
 		logging.info('Started succesfully')
-
 		main_socket_loop(server, last_update)
 	
 
