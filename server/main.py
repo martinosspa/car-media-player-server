@@ -3,6 +3,7 @@ import time
 import logging
 import os
 import json
+import sys
 
 
 def wait_for_client_message(client, message) -> None:
@@ -45,7 +46,9 @@ def send_file_differences(client_file_list, server_file_list, client) -> None:
 
 def build_local_library(path:str) -> list:
 	'''Builds a list of all directories and files in the path specified
-	   Note: directories always come before sub-files in the list'''
+	   Note: directories always come before sub-files in the list
+	   if this order breaks the syncing will break down, this is why the communication
+	    is setup with TCP'''
 	folder_list = []
 	for file in os.listdir(path):
 		if os.path.isfile(path + file):
@@ -70,7 +73,8 @@ def client_begin_sync(client, addr) -> None:
 	client_library_json = json.loads(data.decode())
 
 	send_file_differences(client_library_json, local_library, client)
-	client.sendall('<END>'.encode()) # <END> Tag completes the sync
+	# <END> Tag completes the sync
+	client.sendall('<END>'.encode())
 	logging.info(f'Client {addr[0]} synced')
 
 def main_socket_loop(server, last_update) -> None:
@@ -104,7 +108,9 @@ def main() -> None:
 
 	#Builds audio library 
 	global local_library
-	local_library = build_local_library('audio/')
+	path = sys.argv[1] + '/'
+	os.chdir(path)
+	local_library = build_local_library(path)
 	
 	# start tcp server
 	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:

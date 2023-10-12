@@ -9,7 +9,9 @@ def receive_file(server, file_path) -> None:
 	while True:
 		message = server.recv(40960) # 40960 is 40kB
 		file.write(message)
-		if len(message) < 10: # probably an EOF tag from server
+		# TODO: this is hacky but works, maybe try to find a better alternative
+		# probably an EOF tag from server
+		if len(message) < 10: 
 			if message.decode() == '<EOF>':
 				file.close()
 				server.sendall('<SNF>'.encode())
@@ -30,7 +32,7 @@ def build_local_library(path:str) -> list:
 
 def main():
 	HOST = '192.168.0.63'  # The server's hostname or IP address, currently local ip address
-	PORT = 9999  # The port used by the serverposition
+	PORT = 9999  # The port used by the server position
 
 	last_sync = str(time.time())
 	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
