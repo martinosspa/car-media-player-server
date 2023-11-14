@@ -29,4 +29,5 @@ class DirectoryManager:
 		return folder_list
 
 	def get_folders(self) -> list:
+		'''Returns all folders list'''
 		return self._folder_list
