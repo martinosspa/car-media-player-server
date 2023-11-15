@@ -6,3 +6,6 @@ class ComProtocol:
 	OKAY = '<OKAY>'
 	SYNC = '<SYNC>'
 	END = '<END>'
+	UUID = '<UUID>'
+	NO_UUID = '<NO_UUID>'
+	EOF = '<EOF>'
