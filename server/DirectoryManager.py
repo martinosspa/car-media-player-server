@@ -3,7 +3,7 @@ import os
 class DirectoryManager:
 	def __init__(self, path) -> None:
 		self._path = path
-		self._folder_list = None
+		self._files_list = None
 
 	def build(self) -> list:
 		''' Builds a list of all directories and files in the path specified
@@ -15,7 +15,7 @@ class DirectoryManager:
 			is setup with TCP
 			'''
 		path = os.getcwd() + '/' + self._path
-		self._folder_list = self._build_sub_directories(self._path)
+		self._files_list = self._build_sub_directories(self._path)
 
 	def _build_sub_directories(self, path) -> list:
 		folder_list = []
@@ -28,6 +28,6 @@ class DirectoryManager:
 					folder_list += directory_dict # Both are lists
 		return folder_list
 
-	def get_folders(self) -> list:
+	def get_files(self) -> list:
 		'''Returns all folders list'''
-		return self._folder_list
+		return self._files_list
