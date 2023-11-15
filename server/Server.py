@@ -1,13 +1,17 @@
 import logging
 import socket
-import MessageHandler
 import json
-
+import os
+import uuid
+from MessageHandler import MessageHandler
+from DirectoryManager import DirectoryManager
 
 class Server:
 	_socket = None
 	_message_handler = None
 	_directory_manager = None
+	_client_data = None
+
 
 	def __init__(self) -> None:
 		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,11 +21,15 @@ class Server:
 		self._socket.bind(('192.168.0.63', 9999))
 		logging.info('Started succesfully')
 
-		self._message_handler = ClientManager()
+		#TODO : remove hardcoded client.json file
+		self._load_clients_from_json('clients.json')
+		self._message_handler = MessageHandler()
 
 		#TODO : remove hardcoded local library lookup location
 		self._directory_manager = DirectoryManager('/music')
 
+
+		self._start_main_loop()
 
 	def _start_main_loop(self) -> None:
 		try:
@@ -30,9 +38,8 @@ class Server:
 				client, addr = self._socket.accept()
 				logging.info(f'Connected by {addr[0]}:{addr[1]}')
 
-				last_sync = self._message_handler.receive_from_client()
-				last_sync_decoded = last_sync.decode()
-
+				last_sync_decoded = self._message_handler.receive_from_client(client)
+				
 				if float(last_sync_decoded) > float(last_update):
 					self._message_handler.send_to_client(client, ComProt.OKAY)
 					logging.info(f'Client {addr[0]} is synced')
@@ -90,7 +97,7 @@ class Server:
 			# that waits for client to confirm that a file was received
 			self._message_handler.wait_for_client_message(client, ComProt.SNF)
 
-	def _load_clients_from_json(self, file_name) -> list:
+	def _load_clients_from_json(self, file_name) -> None:
 		if not os.path.isfile(file_name):
 			with open(file_name, 'w') as file:
 				# check if client file exists, if not create it
@@ -98,8 +105,8 @@ class Server:
 				json.dump(data_preload, file)
 
 		with open(file_name) as file:
-			return json.load(file)
-			
+			self._client_data = json.load(file)
+
 	def __del__(self) -> None:
 		if self._socket:
 			self._socket.close()
