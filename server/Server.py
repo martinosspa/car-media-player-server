@@ -5,6 +5,8 @@ import os
 import uuid
 from MessageHandler import MessageHandler
 from DirectoryManager import DirectoryManager
+from ComProtocol import ComProtocol as ComProt
+import time
 
 class Server:
 	_socket = None
@@ -26,10 +28,37 @@ class Server:
 		self._message_handler = MessageHandler()
 
 		#TODO : remove hardcoded local library lookup location
-		self._directory_manager = DirectoryManager('/music')
-
+		self._directory_manager = DirectoryManager('/music/')
+		self._directory_manager.build()
 
 		self._start_main_loop()
+
+	def _handle_client_uuid_message(self, uuid_message) -> None:
+		'''Handles UUID logic and transaction with client'''
+		if uuid_message == ComProt.UUID:
+			client_uuid = self._message_handler.receive_from_client(client)
+			client = self._client_data['clients'][client_uuid]
+
+		elif uuid_message == ComProt.NO_UUID:
+			# generate a uuid for the client and send it
+			client_uuid = str(uuid.uuid4())
+			self._message_handler.send_to_client(client, client_uuid)
+			# save client to clients file
+			self._client_data['clients'][client_uuid] = {'last_sync':'-1'}
+			self._save_client_data_to_file('clients.json')
+
+		else:
+			logging.error(f'Error generating UUID for client at {addr}')
+
+	def _handle_client_last_sync(self, client_last_sync) -> None:
+		'''Handles Syncing logic'''
+		if float(client_last_sync) > float(self._client_data['clients'][client_uuid]['last_sync']):
+			self._message_handler.send_to_client(client, ComProt.OKAY)
+			logging.info(f'Client {addr[0]} is synced')			
+		else:
+			self._message_handler.send_to_client(client, ComProt.SYNC)
+			logging.info(f'Client {addr[0]} needs to sync')
+			self._client_begin_sync(client, addr)
 
 	def _start_main_loop(self) -> None:
 		try:
@@ -37,16 +66,13 @@ class Server:
 				self._socket.listen()
 				client, addr = self._socket.accept()
 				logging.info(f'Connected by {addr[0]}:{addr[1]}')
-
-				last_sync_decoded = self._message_handler.receive_from_client(client)
+				uuid_message = self._message_handler.receive_from_client(client)
+				# Client either sends a uuid message or a no_uuid message
+				self._handle_client_uuid_message(uuid_message)
 				
-				if float(last_sync_decoded) > float(last_update):
-					self._message_handler.send_to_client(client, ComProt.OKAY)
-					logging.info(f'Client {addr[0]} is synced')
-					
-				else:
-					self._client_begin_sync(client, addr)
-					
+				client_last_sync = self._message_handler.receive_from_client(client)
+				self._handle_client_last_sync(client_last_sync)
+				
 				logging.debug(f'Closing connection with {addr[0]}')
 				client.close()
 		# TEMPORARY
@@ -56,14 +82,14 @@ class Server:
 
 	def _client_begin_sync(self, client, addr) -> None:
 		'''This initiates the sync process with a client'''
-		logging.info(f'Client {addr[0]} needs to sync')
-		self._message_handler.send_to_client(client, ComProt.SYNC)
 
 		# Next step in handshake is for client to send their library
 		data = self._message_handler.receive_from_client(client)
-		client_library_json = json.loads(data)
-
-		self._send_file_differences_to_client(client, client_library)
+		if data:
+			client_library_json = json.loads(data)
+		else: 
+			client_library_json = []
+		self._send_file_differences_to_client(client, client_library_json)
 
 		# End the handshake
 		self._message_handler.send_to_client(client, ComProt.END)
@@ -78,8 +104,8 @@ class Server:
 				/folder/file.mp3
 			After every file is sent an additional message is sent with the actual file
 			'''
-		for file in self._directory_manager.get():
-			if file in client_file_list: # Client already has that file
+		for file in self._directory_manager.get_files():
+			if file in client_library: # Client already has that file
 				continue
 
 			if file[-1] == '/':
@@ -87,6 +113,7 @@ class Server:
 				# that client doesnt have
 				# send that difference so client can create the directory
 				self._message_handler.send_to_client(client, file)
+				time.sleep(0.05)
 				continue
 
 			self._message_handler.send_to_client(client, file)
@@ -101,11 +128,15 @@ class Server:
 		if not os.path.isfile(file_name):
 			with open(file_name, 'w') as file:
 				# check if client file exists, if not create it
-				data_preload = {'clients':[]}
+				data_preload = {'clients':{}}
 				json.dump(data_preload, file)
 
 		with open(file_name) as file:
 			self._client_data = json.load(file)
+
+	def _save_client_data_to_file(self, file_name) -> None:
+		with open(file_name, 'w') as file:
+			json.dump(self._client_data, file)
 
 	def __del__(self) -> None:
 		if self._socket:
