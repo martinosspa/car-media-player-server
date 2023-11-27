@@ -1,5 +1,6 @@
 import ComProtocol as ComProt
 import logging
+import os
 class MessageHandler:
 	'''This class manages all communication with clients'''
 
@@ -10,7 +11,7 @@ class MessageHandler:
 		
 		
 	def send_file_to_client(self, client, file_path) -> None:
-		full_path = os.getcwd() + '/' + file_path
+		full_path = os.getcwd() + file_path
 		with open(full_path, 'rb') as file:
 			file_size = os.path.getsize(full_path)
 			while message := file.read(40960):
