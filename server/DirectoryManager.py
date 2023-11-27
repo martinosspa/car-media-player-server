@@ -14,12 +14,11 @@ class DirectoryManager:
 			if this order breaks the syncing will break down, this is why the communication
 			is setup with TCP
 			'''
-		path = os.getcwd() + '/' + self._path
 		self._files_list = self._build_sub_directories(self._path)
-
+		
 	def _build_sub_directories(self, path) -> list:
 		folder_list = []
-		for file in os.listdir(path):
+		for file in os.listdir(os.getcwd() + path):
 			if os.path.isfile(path + file):
 				folder_list.append(path + file)
 			else:
