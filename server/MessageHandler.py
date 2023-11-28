@@ -7,7 +7,7 @@ class MessageHandler:
 
 	def send_to_client(self, client, message) -> None:
 		client.sendall(message.encode())
-		logging.info(f'Sent {message} to client {client}')
+		logging.debug(f'Sent {message} to client {client}')
 		
 		
 	def send_file_to_client(self, client, file_path) -> None:
@@ -22,7 +22,7 @@ class MessageHandler:
 	def wait_for_client_message(self, client, message) -> None:
 		''' This is a blocking method
 			Note: This can cause big trouble for multiple connections'''
-
+		logging.debug(f'Waiting for {client} to send {message}')
 		while True:
 			client_message = client.recv(1024).decode()
 			if client_message == message: 
@@ -31,6 +31,7 @@ class MessageHandler:
 	def receive_from_client(self, client, data_amount=1024) -> str:
 		'''Receive data from client, optional data_amount with default value of 1024
 			Returns a string'''
-
-		data = client.recv(data_amount)
-		return data.decode()
+		
+		data = client.recv(data_amount).decode()
+		logging.debug(f'Received {data} from {client}')
+		return data
