@@ -6,7 +6,7 @@ class ServerHandler:
 		# logging configuration
 		logging.basicConfig(format='[%(asctime)s] [%(levelname)s]: %(message)s', 
 						datefmt='%d %b %H:%M:%S',
-						level=logging.INFO)
+						level=logging.DEBUG)
 		self.server = Server()
 
 

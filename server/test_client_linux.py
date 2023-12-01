@@ -45,7 +45,7 @@ def main():
 		#s.sendall(uuid.encode())
 		#s.sendall(last_sync.encode())
 		uuid = s.recv(1024)
-		s.sendall('-2'.encode())
+		#s.sendall('-2'.encode())
 		data = s.recv(1024)
 		decoded_data = data.decode()
 
@@ -61,6 +61,7 @@ def main():
 			temp_lib = build_local_library(path)
 			local_library = json.dumps(temp_lib)
 			s.sendall(local_library.encode())
+			
 
 
 			# receive changes
