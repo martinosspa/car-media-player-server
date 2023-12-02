@@ -34,8 +34,8 @@ def build_local_library(path:str) -> list:
 	return folder_list
 
 def main():
-	HOST = '192.168.0.63'  # The server's hostname or IP address, currently local ip address
-	PORT = 9999  # The port used by the server position
+	HOST = '172.17.0.1'  # The server's hostname or IP address, currently local ip address
+	PORT = 55000  # The port used by the server position
 
 	last_sync = str(time.time())
 	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

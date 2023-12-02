@@ -18,7 +18,7 @@ class Server:
 		self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 		#TODO : remove hardcoded local ip
-		self._socket.bind(('192.168.0.63', 9999))
+		self._socket.bind(('0.0.0.0', 9999))
 		logging.info('Started succesfully')
 		
 		#TODO : remove hardcoded local library lookup location
