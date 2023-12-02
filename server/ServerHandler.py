@@ -2,6 +2,7 @@ import logging
 from Server import Server
 
 class ServerHandler:
+	'''Encapsulated server object and sets up logging levels'''
 	def __init__(self) -> None:
 		# logging configuration
 		logging.basicConfig(format='[%(asctime)s] [%(levelname)s]: %(message)s', 
