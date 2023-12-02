@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import uuid
 import logging
@@ -29,7 +30,7 @@ class ClientHandler(threading.Thread):
 		if self._is_client_fresh:
 			self._client_begin_sync(self._client_uuid)
 		else:
-			client_last_sync = self._message_handler.receive_from_client(self._client)
+			#client_last_sync = self._message_handler.receive_from_client(self._client)
 			self._handle_client_last_sync(self._client_uuid)
 		logging.debug(f'Closing connection with {self._client_addr[0]}')
 		self._client.close()
@@ -61,7 +62,7 @@ class ClientHandler(threading.Thread):
 			self._is_client_fresh = True
 
 		else:
-			logging.error(f'Error generating UUID for client at {addr}')
+			logging.error(f'Error generating UUID for client at {self._client_addr}')
 		
 		
 

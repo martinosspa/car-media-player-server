@@ -4,3 +4,4 @@ indent-string = "\t"
 indent-after-paren = 1
 jobs = 0
 ignore=test_client_linux.py
+disable=logging-fstring-interpolation
