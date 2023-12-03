@@ -47,7 +47,7 @@ class Client:
 		self._host_ip = data_loaded['host']
 		self._host_port = data_loaded['port']
 		self._uuid = data_loaded['uuid']
-		self._last_sync = data_loaded['last_sync']
+		self._last_sync = str(data_loaded['last_sync'])
 		logging.info('Config file loaded successfully')
 
 	def _dump_to_yaml_file(self, data:dict, file_name:str) -> None:
@@ -97,8 +97,8 @@ class Client:
 			self._socket.connect((self._host_ip, self._host_port))
 			if self._uuid:
 				self._send_to_server(ComProt.UUID)
-				time.sleep(0.05)
 				self._send_to_server(self._uuid)
+				self._send_to_server(self._last_sync)
 			else:
 				self._send_to_server(ComProt.NO_UUID)
 				self._uuid = self._receive_from_server()
@@ -112,11 +112,12 @@ class Client:
 				self._send_to_server(local_library)
 				self._receive_library_changes_from_server()
 
-
+		self._last_sync = time.time()
 		logging.info('Syncing with server done')
 
 	def _send_to_server(self, message:str) -> None:
 		self._socket.sendall(message.encode())
+		time.sleep(0.05)
 
 	def _receive_from_server(self, _bytes=1024) -> str:
 		encoded_string = self._socket.recv(_bytes)
