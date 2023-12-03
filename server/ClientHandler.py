@@ -46,7 +46,7 @@ class ClientHandler(threading.Thread):
 		if uuid_message == ComProt.UUID:
 			logging.debug(f'Client {self._client} has UUID')
 			# Client already has a UUID
-			# Return True so we skip the exchange of
+			# Change _is_client_fresh flag so we skip the exchange of
 			# Last Sync
 			self._client_uuid = self._message_handler.receive_from_client()
 			self._is_client_fresh = False
@@ -89,6 +89,9 @@ class ClientHandler(threading.Thread):
 		# End the handshake
 		self._message_handler.send_to_client(ComProt.END)
 		logging.info(f'Client {client_uuid} synced')
+		# Save client last sync
+		self._client_data[client_uuid] = str(time.time())
+		self._save_client_data_to_file('clients.json')
 
 	def _send_file_differences_to_client(self, client_library) -> None:
 		''' Compares client library to local and sends differences
