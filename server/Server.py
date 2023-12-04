@@ -18,7 +18,7 @@ class Server:
 		self._socket.bind(('0.0.0.0', 9999))
 		logging.info('Started succesfully')
 		#TODO : remove hardcoded local library lookup location
-		self._directory_manager = DirectoryManager('/music/')
+		self._directory_manager = DirectoryManager('/music')
 		self._directory_manager.build()
 		self._start_main_loop()
 

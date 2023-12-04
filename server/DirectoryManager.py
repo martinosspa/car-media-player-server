@@ -15,16 +15,15 @@ class DirectoryManager:
 			is setup with TCP
 			'''
 		self._files_list = self._build_sub_directories(self._path)
-		
+
 	def _build_sub_directories(self, path) -> list:
 		folder_list = []
-		for file in os.listdir(os.getcwd() + path):
-			if os.path.isfile(path + file):
-				folder_list.append(path + file)
-			else:
-				folder_list.append(path + file + '/')
-				if directory_dict := self._build_sub_directories(path + file + '/'):
-					folder_list += directory_dict # Both are lists
+		parent_path_length = len(os.getcwd())
+		for folder_path, directories, files in os.walk(os.getcwd() + path, topdown=True):
+			folder_list.append(folder_path[parent_path_length::] + '/')
+			if files:
+				for file in files:
+					folder_list.append(folder_path[parent_path_length::] + '/' + file)
 		return folder_list
 
 	def get_files(self) -> list:

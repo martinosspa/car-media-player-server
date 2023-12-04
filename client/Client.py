@@ -14,13 +14,12 @@ from ComProtocol import ComProtocol as ComProt
 
 def build_local_library(path:str) -> list:
 	folder_list = []
-	for file in os.listdir(os.getcwd() + path):
-		if os.path.isfile(path + file):
-			folder_list.append(path + file)
-		else:
-			folder_list.append(path + file + '/')
-			if directory_dict := build_local_library(path + file + '/'):
-				folder_list += directory_dict
+	parent_path_length = len(os.getcwd())
+	for folder_path, directories, files in os.walk(os.getcwd() + path, topdown=True):
+		folder_list.append(folder_path[parent_path_length::] + '/')
+		if files:
+			for file in files:
+				folder_list.append(folder_path[parent_path_length::] + '/' + file)
 	return folder_list
 
 class Client:
@@ -106,7 +105,7 @@ class Client:
 			request_to_sync_from_server = self._receive_from_server()
 			if request_to_sync_from_server == ComProt.SYNC:
 				logging.info('Server requested to sync')
-				path = '/music/' # Hardcoded
+				path = '/music' # Hardcoded
 				temp_lib = build_local_library(path)
 				local_library = json.dumps(temp_lib)
 				self._send_to_server(local_library)
@@ -131,7 +130,7 @@ class Client:
 			if not file_path:
 				logging.error('Got empty message, something went wrong')
 				break
-			print(file_path)
+			logging.debug(f'Creating file path: {file_path}')
 			if file_path[-1] == '/':
 				# current syncing file is a directory
 				# if it doesnt already exist, create it
@@ -140,10 +139,10 @@ class Client:
 				continue
 			if file_path[-5::] == ComProt.END:
 				break
-				
+			
 			self._receive_file(file_path)
 
-	def receive_file(self, file_path) -> None:
+	def _receive_file(self, file_path) -> None:
 		file = open(file_path, 'w+b')
 		# receiving file loop
 		while True:
@@ -155,7 +154,6 @@ class Client:
 				if message == ComProt.EOF:
 					file.close()
 					self._send_to_server(ComProt.SNF)
-					#server.sendall(ComProt.SNF.encode())
 					break
 				else:
 					print(message)
