@@ -25,9 +25,11 @@ class ClientHandler(threading.Thread):
 
 	def run(self) -> None:
 		self._check_if_client_is_fresh()
-		
+		# After checking if client is fresh self._client_uuid is always set
+		self._message_handler.set_client_uuid(self._client_uuid)
+
 		if self._is_client_fresh:
-			self._client_begin_sync(self._client_uuid)
+			self._message_handler.set_client_uuid(self._client_uuid)
 		else:
 			#client_last_sync = self._message_handler.receive_from_client(self._client)
 			self._handle_client_last_sync(self._client_uuid)

@@ -6,13 +6,17 @@ from ComProtocol import ComProtocol as ComProt
 class MessageHandler:
 	'''This class manages all communication with clients'''
 
-	def __init__(self, client) -> None:
+	def __init__(self, client, uuid) -> None:
 		'''Message handler class takes a client as a required paramater'''
 		self._client = client
+		self._client_uuid = uuid
 
 	def send_to_client(self, message) -> None:
 		self._client.sendall(message.encode())
-		logging.debug(f'Sent {message} to client {self._client.raddr}')
+		if self._client_uuid:
+			logging.debug(f'Sent {message} to client {self._client_uuid}')
+		else:
+			logging.debug(f'Sent {message} to client {self._client.addr}')
 		time.sleep(0.05)
 
 	def send_file_to_client(self, file_path) -> None:
