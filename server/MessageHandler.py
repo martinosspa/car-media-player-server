@@ -19,7 +19,7 @@ class MessageHandler:
 		if self._client_uuid:
 			logging.debug(f'Sent {message} to client {self._client_uuid}')
 		else:
-			logging.debug(f'Sent {message} to client {self._client.addr}')
+			logging.debug(f'Sent {message} to client {self._client}')
 		time.sleep(0.05)
 
 	def send_file_to_client(self, file_path) -> None:
