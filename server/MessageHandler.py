@@ -5,8 +5,8 @@ from ComProtocol import ComProtocol as ComProt
 
 class MessageHandler:
 	'''This class manages all communication with clients'''
-	self._client_uuid = None
-	
+	_client_uuid = None
+
 	def __init__(self, client) -> None:
 		'''Message handler class takes a client as a required paramater'''
 		self._client = client
