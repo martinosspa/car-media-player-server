@@ -101,6 +101,8 @@ class Client:
 			else:
 				self._send_to_server(ComProt.NO_UUID)
 				self._uuid = self._receive_from_server()
+				self._send_to_server(ComProt.OKAY)
+				logging.debug(f'New client UUID: {self._uuid}')
 
 			request_to_sync_from_server = self._receive_from_server()
 			if request_to_sync_from_server == ComProt.SYNC:

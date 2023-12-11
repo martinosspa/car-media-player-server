@@ -12,16 +12,16 @@ class MessageHandler:
 
 	def send_to_client(self, message) -> None:
 		self._client.sendall(message.encode())
-		logging.debug(f'Sent {message} to client {self._client}')
+		logging.debug(f'Sent {message} to client {self._client.raddr}')
+		time.sleep(0.05)
 
 	def send_file_to_client(self, file_path) -> None:
 		'''Sends a file to client, needs a file path'''
 		full_path = os.getcwd() + file_path
 		with open(full_path, 'rb') as file:
 			while message := file.read(40960):
-				self._client.sendall(message)
-			time.sleep(0.05)
-			self._client.sendall(ComProt.EOF.encode())
+				self.send_to_client(message)
+			self.send_to_client(ComProt.EOF)
 
 	def wait_for_client_message(self, message) -> None:
 		''' This is a blocking method'''

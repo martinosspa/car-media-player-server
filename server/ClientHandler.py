@@ -25,8 +25,7 @@ class ClientHandler(threading.Thread):
 
 	def run(self) -> None:
 		self._check_if_client_is_fresh()
-		print(self._is_client_fresh)
-
+		
 		if self._is_client_fresh:
 			self._client_begin_sync(self._client_uuid)
 		else:
@@ -49,6 +48,7 @@ class ClientHandler(threading.Thread):
 			# Change _is_client_fresh flag so we skip the exchange of
 			# Last Sync
 			self._client_uuid = self._message_handler.receive_from_client()
+			self._message_handler.wait_for_client_message(ComProt.OKAY)
 			self._is_client_fresh = False
 
 		elif uuid_message == ComProt.NO_UUID:
@@ -69,7 +69,7 @@ class ClientHandler(threading.Thread):
 		client_last_sync = self._message_handler.receive_from_client()
 		if float(client_last_sync) > float(self._client_data['clients'][client_uuid]['last_sync']):
 			self._message_handler.send_to_client(ComProt.OKAY)
-			logging.info(f'Client {client_uuid} is synced')			
+			logging.info(f'Client {client_uuid} is synced')
 		else:
 			self._client_begin_sync(client_uuid)
 
