@@ -25,13 +25,11 @@ class ClientHandler(threading.Thread):
 
 	def run(self) -> None:
 		self._check_if_client_is_fresh()
-		# After checking if client is fresh self._client_uuid is always set
-		self._message_handler.set_client_uuid(self._client_uuid)
-
+		
 		if self._is_client_fresh:
-			self._message_handler.set_client_uuid(self._client_uuid)
+			self._client_begin_sync(self._client_uuid)
 		else:
-			#client_last_sync = self._message_handler.receive_from_client(self._client)
+			self._message_handler.set_client_uuid(self._client_uuid)
 			self._handle_client_last_sync(self._client_uuid)
 		logging.debug(f'Closing connection with {self._client_addr[0]}')
 		self._client.close()
@@ -58,6 +56,7 @@ class ClientHandler(threading.Thread):
 			self._client_uuid = str(uuid.uuid4())
 			self._message_handler.send_to_client(self._client_uuid)
 			# save client to clients file
+			self._message_handler.set_client_uuid(self._client_uuid)
 			self._client_data['clients'][self._client_uuid] = {'last_sync':'-1'}
 			self._save_client_data_to_file('clients.json')
 			self._is_client_fresh = True
