@@ -50,7 +50,6 @@ class ClientHandler(threading.Thread):
 			# Change _is_client_fresh flag so we skip the exchange of
 			# Last Sync
 			self._client_uuid = self._message_handler.receive_from_client()
-			self._message_handler.wait_for_client_message(ComProt.OKAY)
 			self._is_client_fresh = False
 
 		elif uuid_message == ComProt.NO_UUID:
