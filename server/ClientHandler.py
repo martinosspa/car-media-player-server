@@ -62,6 +62,7 @@ class ClientHandler(threading.Thread):
 			self._client_data['clients'][self._client_uuid] = {'last_sync':'-1'}
 			self._save_client_data_to_file('clients.json')
 			self._is_client_fresh = True
+			self._message_handler.wait_for_client_message(ComProt.OKAY)
 
 		else:
 			logging.error(f'Error generating UUID for client at {self._client_addr}')
