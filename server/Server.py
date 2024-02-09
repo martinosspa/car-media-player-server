@@ -1,3 +1,4 @@
+import os
 import socket
 import logging
 from ClientHandler import ClientHandler
@@ -20,6 +21,7 @@ class Server:
 		#TODO : remove hardcoded local library lookup location
 		self._directory_manager = DirectoryManager('/music')
 		self._directory_manager.build()
+		os.chdir(os.path.dirname(__file__))
 		self._start_main_loop()
 
 	def _start_main_loop(self) -> None:

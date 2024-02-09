@@ -31,7 +31,7 @@ class Client:
 		'''Creates a default config and returns a dictionary with the data'''
 		logging.info('Config file doesn\'t exist, creating config file')
 		default_data = {
-			'host' : '192.168.0.120',
+			'host' : '127.0.0.1',
 			'port' : 9999,
 			'uuid' : None,
 			'last_sync' : 0
@@ -97,6 +97,11 @@ class Client:
 			if self._uuid:
 				self._send_to_server(ComProt.UUID)
 				self._send_to_server(self._uuid)
+
+				uuid_answer = self._receive_from_server()
+				if uuid_answer == ComProt.ERROR:
+					logging.error(f'Server sent back error for UUID: {self._uuid}')
+					return
 				self._send_to_server(self._last_sync)
 			else:
 				self._send_to_server(ComProt.NO_UUID)

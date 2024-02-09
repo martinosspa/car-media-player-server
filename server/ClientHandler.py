@@ -13,6 +13,7 @@ THREADING_LOCK = threading.Lock()
 class ClientHandler(threading.Thread):
 	_client_uuid = None
 	_is_client_fresh = False
+	_error = False
 
 	def __init__(self, client, addr, directory_manager) -> None:
 		super().__init__()
@@ -25,12 +26,19 @@ class ClientHandler(threading.Thread):
 
 	def run(self) -> None:
 		self._check_if_client_is_fresh()
-		
+
+		if self._error:
+			self._close()
+			return
 		if self._is_client_fresh:
 			self._client_begin_sync(self._client_uuid)
 		else:
 			self._message_handler.set_client_uuid(self._client_uuid)
 			self._handle_client_last_sync(self._client_uuid)
+		
+		self._close()
+
+	def _close(self) -> None:
 		logging.debug(f'Closing connection with {self._client_addr[0]}')
 		self._client.close()
 
@@ -46,8 +54,17 @@ class ClientHandler(threading.Thread):
 			logging.debug(f'Client {self._client} has UUID')
 			# Client already has a UUID
 			# Change _is_client_fresh flag so we skip the exchange of
-			# Last Sync
+
 			self._client_uuid = self._message_handler.receive_from_client()
+			# Check if client exists on server
+			if self._client_uuid not in self._client_data['clients'].keys():
+				# If it doesn't exist close the connection
+				self._message_handler.send_to_client(ComProt.ERROR)
+				logging.error(f'Error finding UUID, client sent: {self._client_uuid} from address {self._client_addr[0]}')
+				# close not needed, checked by main method
+				# self._close()
+				self._error = True
+			# Last Sync
 			self._is_client_fresh = False
 
 		elif uuid_message == ComProt.NO_UUID:
@@ -134,6 +151,6 @@ class ClientHandler(threading.Thread):
 
 	def _save_client_data_to_file(self, file_name) -> None:
 		THREADING_LOCK.acquire()
-		with open(file_name, 'w') as file:
+		with open(file_name, 'w+') as file:
 			json.dump(self._client_data, file)
 		THREADING_LOCK.release()

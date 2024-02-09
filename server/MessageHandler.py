@@ -15,6 +15,7 @@ class MessageHandler:
 		self._client_uuid = uuid
 
 	def send_to_client(self, message) -> None:
+		print(message)
 		self._client.sendall(message.encode())
 		if self._client_uuid:
 			logging.debug(f'Sent {message} to client {self._client_uuid}')

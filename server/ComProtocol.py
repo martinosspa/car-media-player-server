@@ -9,3 +9,4 @@ class ComProtocol:
 	UUID = '<UUID>'
 	NO_UUID = '<NO_UUID>'
 	EOF = '<EOF>'
+	ERROR = '<ERROR>'
